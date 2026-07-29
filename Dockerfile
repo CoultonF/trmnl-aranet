@@ -6,7 +6,7 @@ RUN bun install --frozen-lockfile --production
 COPY src ./src
 
 RUN mkdir -p /data && chown -R bun:bun /app /data
-USER bun
+USER 1000:1000
 
 ENV PORT=3000 \
     DATABASE_PATH=/data/plugin.sqlite
