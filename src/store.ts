@@ -73,7 +73,9 @@ export class PluginStore {
     this.#database.close();
   }
 
-  createPending(installation: PendingInstallation): PendingInstallation {
+  createPending(
+    installation: PendingInstallation,
+  ): PendingInstallation & { configurationSaved: boolean } {
     const row = this.#database
       .query<ConnectionRow, [string, string, string, string]>(`
         INSERT INTO plugin_connections (
@@ -95,6 +97,8 @@ export class PluginStore {
       installationState: row.installation_state,
       callbackUrl: row.callback_url,
       createdAt: row.created_at,
+      configurationSaved: row.ha_url !== null,
+
     };
   }
 

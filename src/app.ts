@@ -211,6 +211,9 @@ export function createApp(dependencies: AppDependencies): App {
           callbackUrl: callbackUrl.href,
           createdAt: dependencies.now().toISOString(),
         });
+        if (pending.configurationSaved) {
+          return Response.redirect(pending.callbackUrl, 303);
+        }
         return renderConfigurationForm({
           action: "/install",
           installationState: pending.installationState,
