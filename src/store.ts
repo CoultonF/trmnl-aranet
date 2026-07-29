@@ -73,20 +73,31 @@ export class PluginStore {
     this.#database.close();
   }
 
-  createPending(installation: PendingInstallation): void {
-    this.#database
-      .query(`
+  createPending(installation: PendingInstallation): PendingInstallation {
+    const row = this.#database
+      .query<ConnectionRow, [string, string, string, string]>(`
         INSERT INTO plugin_connections (
           access_token_hash, installation_state, callback_url, created_at
         ) VALUES (?, ?, ?, ?)
+        ON CONFLICT(access_token_hash) DO UPDATE SET
+          callback_url = excluded.callback_url
+        RETURNING *
       `)
-      .run(
+      .get(
         installation.accessTokenHash,
         installation.installationState,
         installation.callbackUrl,
         installation.createdAt,
       );
+    if (!row) throw new Error("Installation session was not created");
+    return {
+      accessTokenHash: row.access_token_hash,
+      installationState: row.installation_state,
+      callbackUrl: row.callback_url,
+      createdAt: row.created_at,
+    };
   }
+
 
   getPendingByState(state: string): PendingInstallation | null {
     const row = this.#database

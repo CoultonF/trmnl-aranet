@@ -128,6 +128,35 @@ describe("TRMNL Aranet application", () => {
     expect(payload.markup_quadrant).toContain("Bq/m³");
   });
 
+  test("reuses an installation session when its URL is refreshed", async () => {
+    const { fetcher } = makeFetcher();
+    let stateIndex = 0;
+    const app = createApp({
+      store,
+      tokenProtector: createTokenProtector(new Uint8Array(32).fill(3)),
+      fetcher,
+      resolveHost: async () => ["192.168.0.96"],
+      allowedPrivateHosts: new Set(["192.168.0.96"]),
+      randomState: () => ["first-state", "second-state"][stateIndex++]!,
+      now: () => new Date("2026-07-29T21:00:00Z"),
+    });
+    const request = () =>
+      new Request(
+        "https://trmnl.coultonf.com/install?code=abc&installation_callback_url=" +
+          encodeURIComponent(
+            "https://trmnl.com/plugin_settings/new?keyname=aranet&code=abc",
+          ),
+      );
+
+    expect((await app(request())).status).toBe(200);
+    const refreshed = await app(request());
+
+    expect(refreshed.status).toBe(200);
+    expect(await refreshed.text()).toContain(
+      'name="installation_state" value="first-state"',
+    );
+  });
+
   test("serves last-known values as stale when Home Assistant is offline", async () => {
     const { fetcher, failHomeAssistant } = makeFetcher();
     const app = createApp({

@@ -205,16 +205,15 @@ export function createApp(dependencies: AppDependencies): App {
           code,
           dependencies.fetcher,
         );
-        const installationState = dependencies.randomState();
-        dependencies.store.createPending({
+        const pending = dependencies.store.createPending({
           accessTokenHash: await hashAccessToken(accessToken),
-          installationState,
+          installationState: dependencies.randomState(),
           callbackUrl: callbackUrl.href,
           createdAt: dependencies.now().toISOString(),
         });
         return renderConfigurationForm({
           action: "/install",
-          installationState,
+          installationState: pending.installationState,
         });
       }
 
